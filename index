@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>תאכל או תפסיד - משחק פאק-מן לימודי על מגדר ומיניות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 10px;
+            text-align: center;
+            direction: rtl;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #ffcc00;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .question-container {
+            background-color: #16213e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background-color: #0f3460;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .lives span {
+            color: #ff6b6b;
+            font-size: 1.5rem;
+        }
+
+        .score {
+            color: #4cc9f0;
+        }
+
+        .level {
+            color: #f72585;
+        }
+
+        .game-canvas {
+            border-radius: 10px;
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(33, 33, 255, 0.3);
+        }
+
+        .controls {
+            display: none;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: #4361ee;
+            border: none;
+            color: white;
+            font-size: 24px;
+            margin: 5px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background-color: #3a56d4;
+        }
+
+        #startScreen, #gameOverScreen, #victoryScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        #gameOverScreen, #victoryScreen {
+            display: none;
+        }
+
+        .screen-content {
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+        }
+
+        .screen-title {
+            color: #ffcc00;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            color: #4cc9f0;
+        }
+
+        .start-btn, .restart-btn {
+            background-color: #4cc9f0;
+            color: #16213e;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            background-color: #f72585;
+            transform: scale(1.05);
+        }
+
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .feedback-content {
+            background-color: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+            position: relative;
+        }
+
+        .feedback-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ffcc00;
+        }
+
+        .feedback-text {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .continue-btn {
+            background-color: #4cc9f0;
+            color: #16213e;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .continue-btn:hover {
+            background-color: #f72585;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                display: flex;
+            }
+            
+            .question {
+                font-size: 1rem;
+            }
+            
+            .screen-title {
+                font-size: 2rem;
+            }
+            
+            .screen-subtitle {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .game-canvas {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>תאכל או תפסיד - משחק פאק-מן לימודי</h1>
+        
+        <div class="question-container">
+            <p class="question" id="question">שאלה תוצג כאן...</p>
+        </div>
+        
+        <div class="info-bar">
+            <div class="lives">חיים: <span id="lives">❤️❤️❤️</span></div>
+            <div class="score">ניקוד: <span id="score">0</span></div>
+            <div class="level">שלב: <span id="level">1</span></div>
+        </div>
+        
+        <canvas id="gameCanvas" class="game-canvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <button class="control-btn" id="upBtn">▲</button>
+            <div style="display: flex; align-items: center;">
+                <button class="control-btn" id="leftBtn">◀</button>
+                <button class="control-btn" id="downBtn">▼</button>
+                <button class="control-btn" id="rightBtn">▶</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="startScreen">
+        <div class="screen-content">
+            <h2 class="screen-title">תאכל או תפסיד</h2>
+            <p class="screen-subtitle">משחק פאק-מן לימודי על מגדר ומיניות</p>
+            <p>השתמש במקשי החצים או בכפתורי השליטה כדי לזוז במבוך.</p>
+            <p>אכול את התשובות הנכונות והימנע מהתשובות השגויות!</p>
+            <button class="start-btn" id="startBtn">התחל לשחק</button>
+        </div>
+    </div>
+    
+    <div id="gameOverScreen">
+        <div class="screen-content">
+            <h2 class="screen-title">המשחק נגמר</h2>
+            <p class="screen-subtitle">ניקוד סופי: <span id="finalScore">0</span></p>
+            <p>לא נורא! נסה שנית ולמד על מגדר ומיניות בדרך מהנה.</p>
+            <button class="restart-btn" id="restartBtn">התחל מחדש</button>
+        </div>
+    </div>
+    
+    <div id="victoryScreen">
+        <div class="screen-content">
+            <h2 class="screen-title">כל הכבוד!</h2>
+            <p class="screen-subtitle">השלמת את כל השלבים בהצלחה!</p>
+            <p>ניקוד סופי: <span id="victoryScore">0</span></p>
+            <p>יש לך ידע מעולה בנושאי מגדר ומיניות!</p>
+            <button class="restart-btn" id="victoryRestartBtn">שחק שוב</button>
+        </div>
+    </div>
+    
+    <div id="feedbackModal" class="feedback-modal">
+        <div class="feedback-content">
+            <h3 class="feedback-title" id="feedbackTitle">כותרת משוב</h3>
+            <p class="feedback-text" id="feedbackText">טקסט משוב יופיע כאן...</p>
+            <button class="continue-btn" id="continueBtn">המשך</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // קבועים ומשתנים של המשחק
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const startScreen = document.getElementById('startScreen');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const victoryScreen = document.getElementById('victoryScreen');
+            const feedbackModal = document.getElementById('feedbackModal');
+            const questionElement = document.getElementById('question');
+            const livesElement = document.getElementById('lives');
+            const scoreElement = document.getElementById('score');
+            const levelElement = document.getElementById('level');
+            const finalScoreElement = document.getElementById('finalScore');
+            const victoryScoreElement = document.getElementById('victoryScore');
+            const feedbackTitleElement = document.getElementById('feedbackTitle');
+            const feedbackTextElement = document.getElementById('feedbackText');
+            
+            // מאזינים לכפתורים
+            document.getElementById('startBtn').addEventListener('click', startGame);
+            document.getElementById('restartBtn').addEventListener('click', restartGame);
+            document.getElementById('victoryRestartBtn').addEventListener('click', restartGame);
+            document.getElementById('continueBtn').addEventListener('click', closeModal);
+            
+            // כפתורי שליטה למובייל
+            const upBtn = document.getElementById('upBtn');
+            const downBtn = document.getElementById('downBtn');
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            
+            upBtn.addEventListener('touchstart', () => setDirection('up'), { passive: true });
+            downBtn.addEventListener('touchstart', () => setDirection('down'), { passive: true });
+            leftBtn.addEventListener('touchstart', () => setDirection('left'), { passive: true });
+            rightBtn.addEventListener('touchstart', () => setDirection('right'), { passive: true });
+            upBtn.addEventListener('mousedown', () => setDirection('up'));
+            downBtn.addEventListener('mousedown', () => setDirection('down'));
+            leftBtn.addEventListener('mousedown', () => setDirection('left'));
+            rightBtn.addEventListener('mousedown', () => setDirection('right'));
+            
+            // פרמטרים של המשחק
+            let player = { x: 0, y: 0, size: 30, speed: 5, direction: null };
+            let answers = [];
+            let walls = [];
+            let score = 0;
+            let lives = 3;
+            let level = 1;
+            let currentQuestionIndex = 0;
+            let isGameRunning = false;
+            let animationId;
+            
+            // תרשים מבוכים לכל שלב
+            const mazes = [
+                [
+                    "WWWWWWWWWWWWWWWWWWWW",
+                    "W        W         W",
+                    "W WWWW W W WWWWWW WW",
+                    "W W    W W      W  W",
+                    "W WWWWWW W WWWW WW W",
+                    "W        W    W    W",
+                    "W WWWWWW WWWW WWWW W",
+                    "W W             W  W",
+                    "W W WWWWWWWWWWW W WW",
+                    "W W             W  W",
+                    "W WWWWWWWWWWWWWWWW W",
+                    "W                  W",
+                    "WWWWWWWWWWWWWWWWWWWW"
+                ],
+                [
+                    "WWWWWWWWWWWWWWWWWWWW",
+                    "W     W      W     W",
+                    "WWW W W WWWW W WWW W",
+                    "W   W W W    W     W",
+                    "W WWW W W WWWWWWWW W",
+                    "W     W W        W W",
+                    "W WWWWW WWWWWWWW W W",
+                    "W       W        W W",
+                    "WWWWWWW W WWWWWWWW W",
+                    "W       W          W",
+                    "W WWWWWWWWWWWWWWWW W",
+                    "W                  W",
+                    "WWWWWWWWWWWWWWWWWWWW"
+                ],
+                [
+                    "WWWWWWWWWWWWWWWWWWWW",
+                    "W     W           WW",
+                    "W WWW W WWWWWWWWW WW",
+                    "W W   W        W  WW",
+                    "W W WWWWWWWWWW W WWW",
+                    "W W          W W   W",
+                    "W WWWWWWWWWW W WWW W",
+                    "W          W W   W W",
+                    "WWWWWWWWWW W WWW W W",
+                    "W          W     W W",
+                    "W WWWWWWWWWWWWWWWW W",
+                    "W                  W",
+                    "WWWWWWWWWWWWWWWWWWWW"
+                ]
+            ];
+            
+            // שאלות ותשובות
+            const questions = [
+                {
+                    question: "מה ההבדל העיקרי בין 'מין' ל'מגדר'?",
+                    answers: [
+                        { text: "מין הוא ביולוגי, מגדר הוא הבנייה חברתית", correct: true },
+                        { text: "אין הבדל, אלו מילים נרדפות", correct: false },
+                        { text: "מין קשור לאיברי רבייה, מגדר לא קיים", correct: false },
+                        { text: "מגדר הוא ביולוגי, מין הוא חברתי", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! מין מתייחס להבדלים ביולוגיים (כרומוזומים, הורמונים, איברי רבייה), בעוד מגדר מתייחס להבניות חברתיות של תפקידים ונורמות.",
+                        incorrect: "לא נכון. מין מתייחס להבדלים ביולוגיים (כרומוזומים, הורמונים, איברי רבייה), בעוד מגדר מתייחס להבניות חברתיות של תפקידים ונורמות."
+                    }
+                },
+                {
+                    question: "מהי זהות מגדרית?",
+                    answers: [
+                        { text: "תחושה פנימית של אדם לגבי המגדר שלו", correct: true },
+                        { text: "הנטייה המינית של אדם", correct: false },
+                        { text: "המין הביולוגי של אדם", correct: false },
+                        { text: "ביטוי חיצוני של מיניות", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! זהות מגדרית היא התחושה הפנימית של אדם לגבי המגדר שלו, ללא קשר למין שיוחס לו בלידה.",
+                        incorrect: "לא נכון. זהות מגדרית היא התחושה הפנימית של אדם לגבי המגדר שלו, ללא קשר למין שיוחס לו בלידה. היא שונה מנטייה מינית, מין ביולוגי או ביטוי חיצוני."
+                    }
+                },
+                {
+                    question: "מה פירוש המונח 'טרנסג'נדר'?",
+                    answers: [
+                        { text: "אדם שזהותו המגדרית אינה תואמת את המין שיוחס לו בלידה", correct: true },
+                        { text: "אדם בעל נטייה מינית כלפי בני אותו מין", correct: false },
+                        { text: "אדם שנמשך גם לגברים וגם לנשים", correct: false },
+                        { text: "אדם שנולד עם מאפיינים ביולוגיים לא בינאריים", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! טרנסג'נדר הוא אדם שזהותו המגדרית אינה תואמת את המין שיוחס לו בלידה.",
+                        incorrect: "לא נכון. טרנסג'נדר הוא אדם שזהותו המגדרית אינה תואמת את המין שיוחס לו בלידה. זה שונה מנטייה מינית (כמו הומוסקסואליות או ביסקסואליות) או מאינטרסקס."
+                    }
+                },
+                {
+                    question: "מה פירוש המונח 'סיסג'נדר'?",
+                    answers: [
+                        { text: "אדם שזהותו המגדרית תואמת את המין שיוחס לו בלידה", correct: true },
+                        { text: "אדם שזהותו המגדרית אינה תואמת את המין שיוחס לו בלידה", correct: false },
+                        { text: "אדם שאינו מזדהה כגבר או כאישה", correct: false },
+                        { text: "אדם שנמשך לבני המין השני", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! סיסג'נדר הוא אדם שזהותו המגדרית תואמת את המין שיוחס לו בלידה.",
+                        incorrect: "לא נכון. סיסג'נדר הוא אדם שזהותו המגדרית תואמת את המין שיוחס לו בלידה. המונח מהווה ניגוד למונח 'טרנסג'נדר' ואינו קשור לנטייה מינית."
+                    }
+                },
+                {
+                    question: "מה פירוש המונח 'לא-בינארי'?",
+                    answers: [
+                        { text: "אדם שאינו מזדהה באופן בלעדי כגבר או אישה", correct: true },
+                        { text: "אדם שנמשך לשני המינים", correct: false },
+                        { text: "אדם שאין לו נטייה מינית", correct: false },
+                        { text: "אדם שזהותו המגדרית משתנה", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! לא-בינארי מתייחס לאנשים שלא מזדהים באופן בלעדי כגבר או אישה, אלא מעבר לחלוקה הבינארית של מגדר.",
+                        incorrect: "לא נכון. לא-בינארי מתייחס לאנשים שלא מזדהים באופן בלעדי כגבר או אישה, אלא מעבר לחלוקה הבינארית של מגדר. זה שונה מנטייה מינית או מזהות מגדרית משתנה."
+                    }
+                },
+                {
+                    question: "מהי ביסקסואליות?",
+                    answers: [
+                        { text: "משיכה מינית ורומנטית לשני המינים", correct: true },
+                        { text: "משיכה מינית לאנשים ללא תלות במגדר", correct: false },
+                        { text: "משיכה מינית לאנשים מאותו המין", correct: false },
+                        { text: "חוסר משיכה מינית לאחרים", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! ביסקסואליות היא משיכה מינית ורומנטית לשני המינים.",
+                        incorrect: "לא נכון. ביסקסואליות היא משיכה מינית ורומנטית לשני המינים. היא שונה מפאנסקסואליות (משיכה ללא תלות במגדר), הומוסקסואליות (משיכה לאותו המין) או א-מיניות (חוסר משיכה מינית)."
+                    }
+                },
+                {
+                    question: "מהי דיספוריה מגדרית?",
+                    answers: [
+                        { text: "מצוקה הנובעת מחוסר התאמה בין המין שיוחס לאדם לבין זהותו המגדרית", correct: true },
+                        { text: "המשיכה המינית לאנשים מאותו המין", correct: false },
+                        { text: "הבנייה חברתית של תפקידי מגדר", correct: false },
+                        { text: "חוסר יכולת להגדיר את המגדר העצמי", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! דיספוריה מגדרית היא חוויה של מצוקה הנובעת מחוסר התאמה בין המין שיוחס לאדם בלידה לבין זהותו המגדרית.",
+                        incorrect: "לא נכון. דיספוריה מגדרית היא חוויה של מצוקה הנובעת מחוסר התאמה בין המין שיוחס לאדם בלידה לבין זהותו המגדרית. זה אינו קשור למשיכה מינית או להבניה חברתית של תפקידי מגדר."
+                    }
+                },
+                {
+                    question: "מהי פאנסקסואליות?",
+                    answers: [
+                        { text: "משיכה מינית ורומנטית לאנשים ללא תלות בזהות המגדרית שלהם", correct: true },
+                        { text: "משיכה מינית לשני המינים", correct: false },
+                        { text: "משיכה מינית לאנשים מהמין השני", correct: false },
+                        { text: "חוסר משיכה מינית כלפי אחרים", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! פאנסקסואליות היא משיכה מינית ורומנטית לאנשים ללא תלות בזהות המגדרית שלהם.",
+                        incorrect: "לא נכון. פאנסקסואליות היא משיכה מינית ורומנטית לאנשים ללא תלות בזהות המגדרית שלהם. זה שונה מביסקסואליות (משיכה לשני המינים), הטרוסקסואליות (משיכה למין השני) או א-מיניות (חוסר משיכה מינית)."
+                    }
+                },
+                {
+                    question: "מה פירוש המונח 'א-מיניות'?",
+                    answers: [
+                        { text: "חוסר משיכה מינית כלפי אחרים", correct: true },
+                        { text: "משיכה מינית לאנשים מאותו המין", correct: false },
+                        { text: "משיכה מינית לשני המינים", correct: false },
+                        { text: "משיכה מינית למספר רב של אנשים", correct: false }
+                    ],
+                    feedback: {
+                        correct: "נכון מאוד! א-מיניות היא חוסר משיכה מינית כלפי אחרים, אך לא בהכרח חוסר משיכה רומנטית.",
+                        incorrect: "לא נכון. א-מיניות היא חוסר משיכה מינית כלפי אחרים, אך לא בהכרח חוסר משיכה רומנטית. זה שונה מהומוסקסואליות (משיכה לאותו המין), ביסקסואליות (משיכה לשני המינים) או פולימוריות."
+                    }
+                }
+            ];
+            
+            // התאמת גודל הקנבס למסך
+            function resizeCanvas() {
+                const container = document.querySelector('.container');
+                const maxWidth = Math.min(container.clientWidth - 20, 600);
+                
+                // שמירה על יחס רוחב-גובה של 3:2
+                canvas.width = maxWidth;
+                canvas.height = maxWidth * (2/3);
+                
+                // עדכון המשחק אם פעיל
+                if (isGameRunning) {
+                    setupMaze(level - 1);
+                    drawGame();
+                }
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // פונקציות משחק
+            function startGame() {
+                startScreen.style.display = 'none';
+                isGameRunning = true;
+                score = 0;
+                lives = 3;
+                level = 1;
+                currentQuestionIndex = 0;
+                
+                updateUI();
+                setupMaze(level - 1);
+                startGameLoop();
+            }
+            
+            function restart
